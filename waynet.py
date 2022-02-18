@@ -108,7 +108,7 @@ class Block(nn.Module):
         #self.mlp = Mlp(in_features=dim, hidden_features=mlp_hidden_dim, act_layer=act_layer, drop=drop)
 
     def forward(self, x):
-        x = x + self.drop_path(self.mlp(self.norm2(self.filter(self.norm1(x)))))
+        x = x + self.drop_path(self.norm2(self.filter(self.norm1(x))))
         return x
 
 class BlockLayerScale(nn.Module):
