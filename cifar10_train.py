@@ -115,4 +115,4 @@ for epoch in range(args.epochs):
             test_acc += (output.max(1)[1] == y).sum().item()
             m += y.size(0)
 
-    print(f'[{args.name}] Epoch: {epoch} | Train Acc: {train_acc/n:.4f}, Test Acc: {test_acc/m:.4f}, Time: {time.time() - start:.1f}, lr: {lr:.6f}')
+    print(f'[{args.name}] Epoch: {epoch} | Train Acc: {train_acc/n:.4f}, Train Loss: {train_loss:.4f} ,Test Acc: {test_acc/m:.4f}, Time: {time.time() - start:.1f}, lr: {lr:.6f}')
