@@ -7,6 +7,7 @@ import numpy as np
 import time
 import argparse
 from waynet import WayNet
+from functools import partial
 
 
 parser = argparse.ArgumentParser()
@@ -22,7 +23,7 @@ parser.add_argument('--ra-n', default=1, type=int)
 parser.add_argument('--jitter', default=0.1, type=float)
 
 parser.add_argument('--depth', default=12, type=int)
-parser.add_argument('--patch-size', default=2, type=int)
+parser.add_argument('--patch-size', default=16, type=int)
 
 parser.add_argument('--wd', default=0.01, type=float)
 parser.add_argument('--clip-norm', action='store_true')
@@ -50,12 +51,12 @@ test_transform = transforms.Compose([
     transforms.Normalize(cifar10_mean, cifar10_std)
 ])
 
-trainset = torchvision.datasets.CIFAR10(root='./data', train=True,
+trainset = torchvision.datasets.CIFAR10(root='./data_cifar', train=True,
                                         download=True, transform=train_transform)
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size,
                                           shuffle=True, num_workers=args.workers)
 
-testset = torchvision.datasets.CIFAR10(root='./data', train=False,
+testset = torchvision.datasets.CIFAR10(root='./data_cifar', train=False,
                                        download=True, transform=test_transform)
 testloader = torch.utils.data.DataLoader(testset, batch_size=args.batch_size,
                                          shuffle=False, num_workers=args.workers)
@@ -63,6 +64,7 @@ testloader = torch.utils.data.DataLoader(testset, batch_size=args.batch_size,
 
 
 model = WayNet(
+            num_classes=10,
             img_size=args.input_size, 
             patch_size=args.patch_size, embed_dim=384, depth=args.depth,
             norm_layer=partial(nn.LayerNorm, eps=1e-6)
