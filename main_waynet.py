@@ -262,7 +262,7 @@ def main(args):
     #     )
     elif args.arch == 'way-med':
          model = WayNet(
-             img_size=args.input_size, 
+             img_size=args.input_size,num_heads = 16,
              patch_size=16, embed_dim=512, depth=60, drop_path_rate=0.25,
              norm_layer=partial(nn.LayerNorm, eps=1e-6)
          )
@@ -308,7 +308,7 @@ def main(args):
         pos_embed_checkpoint = checkpoint_model['pos_embed']
         embedding_size = pos_embed_checkpoint.shape[-1]
 
-        if args.arch in ['way-ti', 'way-xs', 'way-s', 'way-b']:
+        if args.arch in [ 'way-xs', 'way-med']:
             num_patches = (args.input_size // 16) ** 2
         elif args.arch in ['way-h-ti', 'way-h-s', 'way-h-b']:
             num_patches = (args.input_size // 4) ** 2

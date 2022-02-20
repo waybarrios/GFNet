@@ -195,7 +195,7 @@ class WayNet(nn.Module):
     def __init__(self, img_size=224, patch_size=16, in_chans=3, num_classes=1000, embed_dim=768, depth=12,
                  representation_size=None, uniform_drop=False, multiclass=False, 
                  block_layers_token = LayerScale_Block_CA,drop_rate=0.,Attention_block_token_only=Class_Attention, 
-                 drop_path_rate=0., norm_layer=None, num_heads=12,act_layer=nn.GELU,
+                 drop_path_rate=0., norm_layer=None, num_heads=2,act_layer=nn.GELU,
                  init_scale=1e-4, mlp_ratio_clstk = 4.0, qkv_bias=False, qk_scale=None,
                  Mlp_block_token_only= Mlp, depth_token_only = 2, dropcls=0):
         """
