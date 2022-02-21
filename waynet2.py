@@ -240,12 +240,12 @@ class WayNet2(nn.Module):
     
     def __init__(self, img_size=224, patch_size=16, in_chans=3, num_classes=1000, embed_dim=768, depth=12, depth_conv=4,
                  representation_size=None, uniform_drop=False, multiclass=False, 
-                 block_layers_token = LayerScale_Block_CA,
-                 drop_rate=0.,Attention_block_token_only=Class_Attention, 
-                 drop_path_rate=0., norm_layer=None, num_heads=2,act_layer=nn.GELU,
-                 init_scale=1e-4, mlp_ratio_clstk = 4.0, qkv_bias=False, qk_scale=None,
-                 Mlp_block_token_only= Mlp, depth_token_only = 2, dropcls=0,
-                 mlp_ratio_clstk = 4.0):
+                 block_layers_token = LayerScale_Block_CA,norm_layer=nn.LayerNorm,
+                 drop_rate=0.,attn_drop_rate=0,Mlp_block=Mlp,
+                 Attention_block_token_only=Class_Attention,Attention_block = Attention_talking_head, 
+                 drop_path_rate=0., num_heads=2,act_layer=nn.GELU,
+                 init_scale=1e-4, mlp_ratio_clstk = 4.0, mlp_ratio=4,qkv_bias=False, qk_scale=None,
+                 Mlp_block_token_only= Mlp, depth_token_only = 2, dropcls=0):
         """
         Args:
             img_size (int, tuple): input image size
@@ -306,10 +306,9 @@ class WayNet2(nn.Module):
             for i in range(depth_conv)])
 
         self.blocks = nn.ModuleList([
-            Block(
-                dim=embed_dim, drop=drop_rate, 
-                drop_path=dpr[i], norm_layer=norm_layer, 
-                 h=h, w=w)
+            Block(dim=embed_dim, num_heads=num_heads, mlp_ratio=mlp_ratio, qkv_bias=qkv_bias, qk_scale=qk_scale,
+                drop=drop_rate, attn_drop=attn_drop_rate, drop_path=dpr[i], norm_layer=norm_layer,
+                act_layer=act_layer,Attention_block=Attention_block,Mlp_block=Mlp_block,init_values=init_scale)
             for i in range(depth)])
 
         self.blocks_token_only = nn.ModuleList([
@@ -317,7 +316,7 @@ class WayNet2(nn.Module):
                 dim=embed_dim, num_heads=num_heads, mlp_ratio=mlp_ratio_clstk, qkv_bias=qkv_bias, qk_scale=qk_scale,
                 drop=0.0, attn_drop=0.0, drop_path=0.0, norm_layer=norm_layer,
                 act_layer=act_layer,Attention_block=Attention_block_token_only,
-                Mlp_block=Mlp_block_token_only,init_values=init_scale,mlp_ratio=mlp_ratio_clstk)
+                Mlp_block=Mlp_block_token_only,init_values=init_scale)
             for i in range(depth_token_only)])
         
         self.norm = norm_layer(embed_dim)
