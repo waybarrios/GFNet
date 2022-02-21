@@ -31,7 +31,7 @@ def get_args_parser():
     parser = argparse.ArgumentParser('DeiT training and evaluation script', add_help=False)
     parser.add_argument('--batch-size', default=64, type=int)
     parser.add_argument('--epochs', default=300, type=int)
-
+    parser.add_argument('--patch-size',default=16,type=int)
     # Model parameters
     parser.add_argument('--arch', default='deit_small', type=str,
                         help='Name of model to train')
@@ -138,7 +138,7 @@ def get_args_parser():
     # Dataset parameters
     parser.add_argument('--data-path', default='/datasets01/imagenet_full_size/061417/', type=str,
                         help='dataset path')
-    parser.add_argument('--data-set', default='IMNET', choices=['CIFAR', 'IMNET', 'INAT', 'INAT19'],
+    parser.add_argument('--data-set', default='IMNET', choices=['CIFAR10', 'IMNET', 'INAT', 'INAT19','CIFAR100'],
                         type=str, help='Image Net dataset path')
     parser.add_argument('--inat-category', default='name',
                         choices=['kingdom', 'phylum', 'class', 'order', 'supercategory', 'family', 'genus', 'name'],
@@ -244,8 +244,8 @@ def main(args):
 
     if args.arch == 'way-xs':
         model = WayNet(
-            img_size=args.input_size, 
-            patch_size=16, embed_dim=384, depth=12,
+            img_size=args.input_size,num_classes=args.nb_classes,num_heads=4, 
+            patch_size=args.patch_size, embed_dim=384, depth=4,
             norm_layer=partial(nn.LayerNorm, eps=1e-6)
         )
     # elif args.arch == 'gfnet-ti':
@@ -262,8 +262,8 @@ def main(args):
     #     )
     elif args.arch == 'way-med':
          model = WayNet(
-             img_size=args.input_size,num_heads = 16,
-             patch_size=16, embed_dim=512, depth=60, drop_path_rate=0.25,
+             img_size=args.input_size,num_heads = 16,num_classes=args.nb_classes,
+             patch_size=args.patch_size, embed_dim=512, depth=60, drop_path_rate=0.25,
              norm_layer=partial(nn.LayerNorm, eps=1e-6)
          )
     # elif args.arch == 'gfnet-h-ti':
@@ -309,7 +309,8 @@ def main(args):
         embedding_size = pos_embed_checkpoint.shape[-1]
 
         if args.arch in [ 'way-xs', 'way-med']:
-            num_patches = (args.input_size // 16) ** 2
+            num_patches = (args.input_size // args.patch_size) ** 2
+            print("Number of patches: {}".format(num_patches))
         elif args.arch in ['way-h-ti', 'way-h-s', 'way-h-b']:
             num_patches = (args.input_size // 4) ** 2
         else:
