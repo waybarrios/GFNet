@@ -244,7 +244,8 @@ class WayNet2(nn.Module):
                  drop_rate=0.,Attention_block_token_only=Class_Attention, 
                  drop_path_rate=0., norm_layer=None, num_heads=2,act_layer=nn.GELU,
                  init_scale=1e-4, mlp_ratio_clstk = 4.0, qkv_bias=False, qk_scale=None,
-                 Mlp_block_token_only= Mlp, depth_token_only = 2, dropcls=0):
+                 Mlp_block_token_only= Mlp, depth_token_only = 2, dropcls=0,
+                 mlp_ratio_clstk = 4.0):
         """
         Args:
             img_size (int, tuple): input image size
@@ -316,7 +317,7 @@ class WayNet2(nn.Module):
                 dim=embed_dim, num_heads=num_heads, mlp_ratio=mlp_ratio_clstk, qkv_bias=qkv_bias, qk_scale=qk_scale,
                 drop=0.0, attn_drop=0.0, drop_path=0.0, norm_layer=norm_layer,
                 act_layer=act_layer,Attention_block=Attention_block_token_only,
-                Mlp_block=Mlp_block_token_only,init_values=init_scale)
+                Mlp_block=Mlp_block_token_only,init_values=init_scale,mlp_ratio=mlp_ratio_clstk)
             for i in range(depth_token_only)])
         
         self.norm = norm_layer(embed_dim)
