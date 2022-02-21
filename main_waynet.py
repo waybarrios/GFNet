@@ -244,8 +244,13 @@ def main(args):
 
     if args.arch == 'way-xs':
         model = WayNet(
+<<<<<<< HEAD
             img_size=args.input_size,num_classes=args.nb_classes,num_heads=4, 
             patch_size=args.patch_size, embed_dim=384, depth=4,
+=======
+            img_size=args.input_size, 
+            patch_size=16, embed_dim=384, depth=12, num_heads = 12,
+>>>>>>> d355affaa7db525880f5c9cfc69b50a66fc9ac4c
             norm_layer=partial(nn.LayerNorm, eps=1e-6)
         )
     # elif args.arch == 'gfnet-ti':
