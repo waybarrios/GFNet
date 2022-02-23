@@ -214,7 +214,7 @@ class ConvEmbedd(nn.Module):
         for _ in range (depth_conv): w = w // 2 
 
         #proj param
-        self.proj = nn.Parameter(torch.zeros(patch_embed,w))
+        self.proj = nn.Parameter(torch.zeros(patch_embed,w**2))
         trunc_normal_(self.proj, std=.02)
        
     def forward(self,x):
@@ -286,7 +286,7 @@ class WayNet2(nn.Module):
                  Attention_block_token_only=Class_Attention,Attention_block = Attention_talking_head, 
                  drop_path_rate=0., num_heads=2,act_layer=nn.GELU,
                  init_scale=1e-4, mlp_ratio_clstk = 4.0, mlp_ratio=4,qkv_bias=False, qk_scale=None,
-                 Mlp_block_token_only= Mlp, depth_token_only = 2, dropcls=0, depth_conv = 4):
+                 Mlp_block_token_only= Mlp, depth_token_only = 2, dropcls=0):
         """
         Args:
             img_size (int, tuple): input image size
@@ -347,14 +347,12 @@ class WayNet2(nn.Module):
        #          h=h, w=w)
        #     for i in range(depth_conv)])
         patch_emb_size = h ** 2
-        self.block_conv = nn.ModuleList([
-            ConvEmbedd(
+        self.block_conv = ConvEmbedd(
                  dim=embed_dim, kernel_size = 3 ,
                  n_input_channels = in_chans, depth_conv = depth_conv,
                  conv_bias = True, pooling_kernel_size=2, 
                  pooling_stride=2, pooling_padding=0, 
                  input_size=img_size,patch_embed = patch_emb_size)
-            ])
 
         self.blocks = nn.ModuleList([
             Block(dim=embed_dim, num_heads=num_heads, mlp_ratio=mlp_ratio, qkv_bias=qkv_bias, qk_scale=qk_scale,
@@ -423,10 +421,10 @@ class WayNet2(nn.Module):
         B = x.shape[0]
         cls_tokens = self.cls_token.expand(B, -1, -1)  
         #patch embed
-        x_patch = self.patch_embed(x)
-        x_conv = self.block_conv(x)
+        #x_patch = self.patch_embed(x)
+        #x_conv = self.block_conv(x)
         #feature fusion
-        x = x_patch + x_conv
+        x = self.patch_embed(x) + self.block_conv(x)
         #conv embedd
         #for blk in self.blocks_conv:
          #   x = blk(x)
