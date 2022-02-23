@@ -180,6 +180,47 @@ class ConvResidual(nn.Module):
         return x
 
 
+
+        
+
+class ConvEmbedd(nn.Module):
+    def __init__(self, dim, kernel_size = 3 ,
+                 n_input_channels = 3, depth_conv = 4,
+                 conv_bias = True, pooling_kernel_size=2, 
+                 pooling_stride=2, pooling_padding=0, 
+                 input_size=224,patch_embed = 196):
+        super().__init__()
+        stride = max(1, (kernel_size // 2) - 1)
+        padding = max(1, (kernel_size // 2))
+        in_planes,n_output_channels = dim // 8 ,dim
+        n_filter_list = [in_planes] + \
+                        [in_planes*2 for _ in range(depth_conv - 1)] + \
+                        [n_output_channels] 
+        self.first_conv = nn.Conv2d(n_input_channels,in_planes,kernel_size=(3,3),stride=(2,2),padding=(1,1),bias = True);
+        self.conv_layers = nn.Sequential(
+                    *[nn.Sequential(
+                        nn.Conv2d(n_filter_list[i], n_filter_list[i + 1],
+                                  kernel_size=(kernel_size, kernel_size),
+                                  stride=(stride, stride),
+                                  padding=(padding, padding), bias=conv_bias),
+                        nn.GELU(),
+                        nn.BatchNorm2d(n_filter_list[i + 1]),
+                        nn.MaxPool2d(kernel_size=pooling_kernel_size,
+                                     stride=pooling_stride,
+                                     padding=pooling_padding) )
+                        for i in range(depth_conv)
+                    ])
+        w=input_size // 2
+        for _ in range (depth_conv): w = w // 2 
+
+        #proj param
+        self.proj = nn.Parameter(torch.zeros(patch_embed,w))
+        trunc_normal_(self.proj, std=.02)
+       
+    def forward(self,x):
+            x = self.conv_layers(self.first_conv(x)).flatten(2).transpose(2, 1)
+            return self.proj @ x
+
 class BlockConv(nn.Module):
     def __init__(self, dim, drop=0., drop_path=0., act_layer=nn.GELU, norm_layer=nn.LayerNorm, h=14, w=8):
         super().__init__()
@@ -245,7 +286,7 @@ class WayNet2(nn.Module):
                  Attention_block_token_only=Class_Attention,Attention_block = Attention_talking_head, 
                  drop_path_rate=0., num_heads=2,act_layer=nn.GELU,
                  init_scale=1e-4, mlp_ratio_clstk = 4.0, mlp_ratio=4,qkv_bias=False, qk_scale=None,
-                 Mlp_block_token_only= Mlp, depth_token_only = 2, dropcls=0):
+                 Mlp_block_token_only= Mlp, depth_token_only = 2, dropcls=0, depth_conv = 4):
         """
         Args:
             img_size (int, tuple): input image size
@@ -298,12 +339,22 @@ class WayNet2(nn.Module):
             dpr = [x.item() for x in torch.linspace(0, drop_path_rate, depth)]  # stochastic depth decay rule
         # dpr = [drop_path_rate for _ in range(depth)]  # stochastic depth decay rule
         
-        self. blocks_conv = nn.ModuleList([
-            BlockConv(
-                dim=embed_dim, drop=drop_rate, 
-                drop_path=dpr[i], norm_layer=norm_layer, 
-                 h=h, w=w)
-            for i in range(depth_conv)])
+
+       # self. blocks_conv = nn.ModuleList([
+       #     BlockConv(
+       #         dim=embed_dim, drop=drop_rate, 
+       #         drop_path=dpr[i], norm_layer=norm_layer, 
+       #          h=h, w=w)
+       #     for i in range(depth_conv)])
+        patch_emb_size = h ** 2
+        self.block_conv = nn.ModuleList([
+            ConvEmbedd(
+                 dim=embed_dim, kernel_size = 3 ,
+                 n_input_channels = in_chans, depth_conv = depth_conv,
+                 conv_bias = True, pooling_kernel_size=2, 
+                 pooling_stride=2, pooling_padding=0, 
+                 input_size=img_size,patch_embed = patch_emb_size)
+            ])
 
         self.blocks = nn.ModuleList([
             Block(dim=embed_dim, num_heads=num_heads, mlp_ratio=mlp_ratio, qkv_bias=qkv_bias, qk_scale=qk_scale,
@@ -372,10 +423,13 @@ class WayNet2(nn.Module):
         B = x.shape[0]
         cls_tokens = self.cls_token.expand(B, -1, -1)  
         #patch embed
-        x = self.patch_embed(x)
+        x_patch = self.patch_embed(x)
+        x_conv = self.block_conv(x)
+        #feature fusion
+        x = x_patch + x_conv
         #conv embedd
-        for blk in self.blocks_conv:
-            x = blk(x)
+        #for blk in self.blocks_conv:
+         #   x = blk(x)
         x = x + self.pos_embed
         x = self.pos_drop(x)
         for blk in self.blocks:
