@@ -270,8 +270,8 @@ def main(args):
          )
     elif args.arch == 'way2-med':
          model = WayNet2(
-             img_size=args.input_size,num_heads = 16,num_classes=args.nb_classes,
-             depth_conv = 2, patch_size=args.patch_size, embed_dim=512, depth=32, drop_path_rate=0.25,
+             img_size=args.input_size,num_heads = 2,num_classes=args.nb_classes,
+             depth_conv = 2, patch_size=args.patch_size, embed_dim=386, depth=2, drop_path_rate=0,
              norm_layer=partial(nn.LayerNorm, eps=1e-6)
          )
     # elif args.arch == 'gfnet-h-ti':
