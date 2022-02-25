@@ -24,6 +24,8 @@ from samplers import RASampler
 import utils
 from waynet import WayNet
 from waynet2 import WayNet2
+from waynet3 import WayNet3
+
 
 
 import warnings
@@ -272,6 +274,12 @@ def main(args):
          model = WayNet2(
              img_size=args.input_size,num_heads = 2,num_classes=args.nb_classes,
              depth_conv = 2, patch_size=args.patch_size, embed_dim=386, depth=2, drop_path_rate=0,
+             norm_layer=partial(nn.LayerNorm, eps=1e-6)
+         )
+    elif args.arch == 'way3-med':
+         model = WayNet3(
+             img_size=args.input_size,num_heads = 2,num_classes=args.nb_classes,
+             depth_conv = 2, patch_size=args.patch_size, embed_dim=512, depth=2, drop_path_rate=0,
              norm_layer=partial(nn.LayerNorm, eps=1e-6)
          )
     # elif args.arch == 'gfnet-h-ti':
